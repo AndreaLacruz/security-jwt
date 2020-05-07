@@ -5,9 +5,9 @@ import ar.com.ada.sb.security.jwt.service.security.JwtUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,7 +19,7 @@ import java.io.IOException;
 
 public class JwtAuthTokenFilter extends OncePerRequestFilter {
 
-    @Value("auth.jwt.header.key")
+    @Value("${auth.jwt.header.key}")
     private String authHeaderKey;
 
     @Autowired @Qualifier("jwtAuthProvider")
@@ -41,11 +41,11 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
             UserDetails userDetails = jwtUserDetailsService.loadUserByUsername(username);
 
             if (jwtAuthProvider.validateToken(authToken, userDetails)){
-                UsernamePasswordAuthenticationFilter authenticationFilter = new UsernamePasswordAuthenticationFilter(
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
 
-                authenticationFilter.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
-                SecurityContextHolder.getContext().getAuthentication(authenticationFilter);
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
         chain.doFilter(req, res);
